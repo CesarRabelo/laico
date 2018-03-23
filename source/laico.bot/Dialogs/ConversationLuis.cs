@@ -1,6 +1,7 @@
 ﻿using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Luis;
 using Microsoft.Bot.Builder.Luis.Models;
+using Microsoft.Bot.Connector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,31 +21,55 @@ namespace laico.bot.Dialogs
             await context.PostAsync("Desculpe, não consegui entender a sua frase **" + result.Query + "**");
         }
 
-        [LuisIntent("localizacao")]
-        public async Task Localizacao(IDialogContext context, LuisResult result)
-        {
-            var feiras = result.Entities?.Select(e => e.Entity);
-
-            await context.PostAsync($"Você entrou na parte de localização {string.Join(",", feiras.ToArray())} ");
-        }
-
         [LuisIntent("saudacao")]
         public async Task Saudacao(IDialogContext context, LuisResult result)
         {
-            await context.PostAsync("Olá eu sou um Bot, estou sempre aprendendo.");
+            await context.PostAsync("Olá eu sou o LAICO, seu assistente virtual.");
+            await CardMessageSaudacao(context);
         }
 
-        [LuisIntent("sobre")]
-        public async Task Sobre(IDialogContext context, LuisResult result)
+        private static async Task CardMessageSaudacao(IDialogContext context)
         {
-            await context.PostAsync("Olá eu sou um Bot, estou sempre aprendendo.");
+            var message = context.MakeMessage();
+
+            var heroCard = new HeroCard();
+            heroCard.Title = "LAICO";
+            heroCard.Subtitle = "Assistente político virtual";
+            heroCard.Images = new List<CardImage>
+            {
+                new CardImage("https://res.cloudinary.com/teepublic/image/private/s--uzVes9cE--/t_Preview/b_rgb:191919,c_limit,f_jpg,h_630,q_90,w_630/v1511519722/production/designs/2096240_1.jpg", "Eu sou o Laico")
+            };
+
+            message.Attachments.Add(heroCard.ToAttachment());
+
+            await context.PostAsync(message);
         }
 
-        [LuisIntent("cumprimentos")]
+        [LuisIntent("quemsou")]
+        public async Task QuemSou(IDialogContext context, LuisResult result)
+        {
+            await context.PostAsync("Eu sou o LAICO, seu assistente virtual político.");
+            await CardMessageSaudacao(context);
+            await context.PostAsync("Em que posso lhe ajudar?");
+        }
+
+        [LuisIntent("eleicoes")]
         public async Task Cumprimentos(IDialogContext context, LuisResult result)
-
         {
-            await context.PostAsync("Olá, como vai você ?");
-        }        
+            await context.PostAsync("O que deseja saber sobre as eleições?");
+
+            await EleicoesDialog.Actions(context);
+        }
+
+        [LuisIntent("papel")]
+        public async Task Papel(IDialogContext context, LuisResult result)
+        {
+            var entities = result.Entities?.Select(e => e.Entity);
+
+            await context.PostAsync($"Você entrou em papel {string.Join(",", entities.ToArray())} ");
+        }
+
+
+
     }
 }
